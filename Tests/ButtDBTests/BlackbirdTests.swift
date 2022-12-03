@@ -1,5 +1,5 @@
 //
-//  BlackbirdTests.swift
+//  ButtDBTests.swift
 //  Created by Marco Arment on 11/20/22.
 //  Copyright (c) 2022 Marco Arment
 //
@@ -26,7 +26,7 @@
 
 import XCTest
 import Combine
-@testable import Blackbird
+@testable import ButtDB
 
 func AssertNoThrowAsync(_ action: @autoclosure (() async throws -> Void)) async {
     do {
@@ -43,7 +43,7 @@ func AssertThrowsErrorAsync(_ action: @autoclosure (() async throws -> Void)) as
     } catch { }
 }
 
-final class BlackbirdTestTests: XCTestCase {
+final class ButtDBTestTests: XCTestCase {
     enum Error: Swift.Error {
         case testError
     }
@@ -65,70 +65,70 @@ final class BlackbirdTestTests: XCTestCase {
     // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
 
     func testValueConversions() throws {
-        guard let n = Blackbird.Value.fromSQLiteLiteral("NULL") else { throw Error.testError }
+        guard let n = ButtDB.Value.fromSQLiteLiteral("NULL") else { throw Error.testError }
         XCTAssert(n == .null)
         XCTAssert(n.intValue == nil)
         XCTAssert(n.doubleValue == nil)
         XCTAssert(n.stringValue == nil)
         XCTAssert(n.dataValue == nil)
-        XCTAssert((try Blackbird.Value.fromAny(nil)) == n)
-        XCTAssert((try Blackbird.Value.fromAny(NSNull())) == n)
+        XCTAssert((try ButtDB.Value.fromAny(nil)) == n)
+        XCTAssert((try ButtDB.Value.fromAny(NSNull())) == n)
 
-        guard let i = Blackbird.Value.fromSQLiteLiteral("123456") else { throw Error.testError }
+        guard let i = ButtDB.Value.fromSQLiteLiteral("123456") else { throw Error.testError }
         XCTAssert(i == .integer(123456))
         XCTAssert(i.intValue == 123456)
         XCTAssert(i.doubleValue == 123456.0)
         XCTAssert(i.stringValue == "123456")
         XCTAssert(i.dataValue == "123456".data(using: .utf8))
-        XCTAssert((try Blackbird.Value.fromAny(123456)) == i)
-        XCTAssert((try Blackbird.Value.fromAny(Int(123456))) == i)
-        XCTAssert((try Blackbird.Value.fromAny(Int8(123))) == .integer(123))
-        XCTAssert((try Blackbird.Value.fromAny(Int16(12345))) == .integer(12345))
-        XCTAssert((try Blackbird.Value.fromAny(Int32(123456))) == i)
-        XCTAssert((try Blackbird.Value.fromAny(Int64(123456))) == i)
-        XCTAssert((try Blackbird.Value.fromAny(UInt(123456))) == i)
-        XCTAssert((try Blackbird.Value.fromAny(UInt8(123))) == .integer(123))
-        XCTAssert((try Blackbird.Value.fromAny(UInt16(12345))) == .integer(12345))
-        XCTAssert((try Blackbird.Value.fromAny(UInt32(123456))) == i)
-        XCTAssertThrowsError(try Blackbird.Value.fromAny(UInt64(123456)))
-        XCTAssert((try Blackbird.Value.fromAny(false)) == .integer(0))
-        XCTAssert((try Blackbird.Value.fromAny(true)) == .integer(1))
+        XCTAssert((try ButtDB.Value.fromAny(123456)) == i)
+        XCTAssert((try ButtDB.Value.fromAny(Int(123456))) == i)
+        XCTAssert((try ButtDB.Value.fromAny(Int8(123))) == .integer(123))
+        XCTAssert((try ButtDB.Value.fromAny(Int16(12345))) == .integer(12345))
+        XCTAssert((try ButtDB.Value.fromAny(Int32(123456))) == i)
+        XCTAssert((try ButtDB.Value.fromAny(Int64(123456))) == i)
+        XCTAssert((try ButtDB.Value.fromAny(UInt(123456))) == i)
+        XCTAssert((try ButtDB.Value.fromAny(UInt8(123))) == .integer(123))
+        XCTAssert((try ButtDB.Value.fromAny(UInt16(12345))) == .integer(12345))
+        XCTAssert((try ButtDB.Value.fromAny(UInt32(123456))) == i)
+        XCTAssertThrowsError(try ButtDB.Value.fromAny(UInt64(123456)))
+        XCTAssert((try ButtDB.Value.fromAny(false)) == .integer(0))
+        XCTAssert((try ButtDB.Value.fromAny(true)) == .integer(1))
 
-        guard let d = Blackbird.Value.fromSQLiteLiteral("123456.789") else { throw Error.testError }
+        guard let d = ButtDB.Value.fromSQLiteLiteral("123456.789") else { throw Error.testError }
         XCTAssert(d == .double(123456.789))
         XCTAssert(d.intValue == 123456)
         XCTAssert(d.doubleValue == 123456.789)
         XCTAssert(d.stringValue == "123456.789")
         XCTAssert(d.dataValue == "123456.789".data(using: .utf8))
-        XCTAssert((try Blackbird.Value.fromAny(123456.789)) == d)
-        XCTAssert((try Blackbird.Value.fromAny(Float(123456.789))) == .double(123456.7890625))
-        XCTAssert((try Blackbird.Value.fromAny(Double(123456.789))) == d)
+        XCTAssert((try ButtDB.Value.fromAny(123456.789)) == d)
+        XCTAssert((try ButtDB.Value.fromAny(Float(123456.789))) == .double(123456.7890625))
+        XCTAssert((try ButtDB.Value.fromAny(Double(123456.789))) == d)
 
-        guard let s = Blackbird.Value.fromSQLiteLiteral("'abc\"🌊\"d''éƒ'''") else { throw Error.testError }
+        guard let s = ButtDB.Value.fromSQLiteLiteral("'abc\"🌊\"d''éƒ'''") else { throw Error.testError }
         XCTAssert(s == .text("abc\"🌊\"d'éƒ'"))
         XCTAssert(s.intValue == nil)
         XCTAssert(s.doubleValue == nil)
         XCTAssert(s.stringValue == "abc\"🌊\"d'éƒ'")
         XCTAssert(s.dataValue == "abc\"🌊\"d'éƒ'".data(using: .utf8)!)
-        XCTAssert((try Blackbird.Value.fromAny("abc\"🌊\"d'éƒ'")) == s)
+        XCTAssert((try ButtDB.Value.fromAny("abc\"🌊\"d'éƒ'")) == s)
     
-        guard let b = Blackbird.Value.fromSQLiteLiteral("X\'616263F09F8C8A64C3A9C692\'") else { throw Error.testError }
+        guard let b = ButtDB.Value.fromSQLiteLiteral("X\'616263F09F8C8A64C3A9C692\'") else { throw Error.testError }
         XCTAssert(b == .data("abc🌊déƒ".data(using: .utf8)!))
         XCTAssert(b.intValue == nil)
         XCTAssert(b.doubleValue == nil)
         XCTAssert(b.stringValue == "abc🌊déƒ")
         XCTAssert(b.dataValue == "abc🌊déƒ".data(using: .utf8))
-        XCTAssert((try Blackbird.Value.fromAny("abc🌊déƒ".data(using: .utf8)!)) == b)
+        XCTAssert((try ButtDB.Value.fromAny("abc🌊déƒ".data(using: .utf8)!)) == b)
 
         let date = Date()
-        XCTAssert((try Blackbird.Value.fromAny(date)) == .double(date.timeIntervalSince1970))
+        XCTAssert((try ButtDB.Value.fromAny(date)) == .double(date.timeIntervalSince1970))
         
         let url = URL(string: "https://www.marco.org/")!
-        XCTAssert((try Blackbird.Value.fromAny(url)) == .text(url.absoluteString))
+        XCTAssert((try ButtDB.Value.fromAny(url)) == .text(url.absoluteString))
     }
 
     func testOpenDB() async throws {
-        let db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        let db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         try await TestModel.resolveSchema(in: db)
         try await SchemaChangeAddColumnsInitial.resolveSchema(in: db)
         try await SchemaChangeRebuildTableInitial.resolveSchema(in: db)
@@ -136,7 +136,7 @@ final class BlackbirdTestTests: XCTestCase {
     }
     
     func testQueries() async throws {
-        let db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        let db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         let count = min(TestData.URLs.count, TestData.titles.count, TestData.descriptions.count)
         
         try await db.transaction { core in
@@ -168,7 +168,7 @@ final class BlackbirdTestTests: XCTestCase {
     }
 
     func testColumnTypes() async throws {
-        let db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        let db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         try await TypeTest.resolveSchema(in: db)
         
         let tt = TypeTest(id: Int64.max, typeIntNull: nil, typeIntNotNull: Int64.min, typeTextNull: nil, typeTextNotNull: "textNotNull!", typeDoubleNull: nil, typeDoubleNotNull: Double.pi, typeDataNull: nil, typeDataNotNull: "dataNotNull!".data(using: .utf8)!)
@@ -188,7 +188,7 @@ final class BlackbirdTestTests: XCTestCase {
     }
 
     func testHeavyWorkload() async throws {
-        let db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        let db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
 
         // big block of writes to populate the DB
         try await db.transaction { core in
@@ -218,7 +218,7 @@ final class BlackbirdTestTests: XCTestCase {
     }
     
     func testMultiStatements() async throws {
-        let db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        let db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         try await Post.resolveSchema(in: db)
         try await db.execute("PRAGMA user_version = 234; UPDATE Post SET url = NULL")
         let userVersion = try await db.query("PRAGMA user_version").first?["user_version"]
@@ -227,7 +227,7 @@ final class BlackbirdTestTests: XCTestCase {
     }
 
     func testTransactionRollback() async throws {
-        let db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        let db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         
         let id = TestData.randomInt64()
         let originalTitle = TestData.randomTitle
@@ -249,14 +249,14 @@ final class BlackbirdTestTests: XCTestCase {
     }
 
     func testConcurrentAccessToSameDBFile() async throws {
-        let mem1 = try Blackbird.Database.inMemoryDatabase(options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
-        XCTAssertNoThrow(try _ = Blackbird.Database.inMemoryDatabase())
+        let mem1 = try ButtDB.Database.inMemoryDatabase(options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        XCTAssertNoThrow(try _ = ButtDB.Database.inMemoryDatabase())
         try await mem1.execute("PRAGMA user_version = 1") // so mem1 doesn't get deallocated until after this
 
-        let db1 = try Blackbird.Database(path: sqliteFilename)
-        XCTAssertThrowsError(try _ = Blackbird.Database(path: sqliteFilename))
+        let db1 = try ButtDB.Database(path: sqliteFilename)
+        XCTAssertThrowsError(try _ = ButtDB.Database(path: sqliteFilename))
         await db1.close()
-        XCTAssertNoThrow(try Blackbird.Database(path: sqliteFilename)) // should be OK to reuse a path after .close()
+        XCTAssertNoThrow(try ButtDB.Database(path: sqliteFilename)) // should be OK to reuse a path after .close()
     
         await AssertThrowsErrorAsync(try await db1.execute("PRAGMA user_version = 1")) // so db1 doesn't get deallocated until after this and we test throwing errors for accessing a closed DB
     }
@@ -266,11 +266,11 @@ final class BlackbirdTestTests: XCTestCase {
         let feedID = TestData.randomInt64()
         let episodeID = TestData.randomInt64()
 
-        var db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        var db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         try await SchemaChangeAddPrimaryKeyColumnInitial(userID: userID, feedID: feedID, subscribed: true).write(to: db)
         await db.close()
     
-        db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         let newInstance = SchemaChangeAddPrimaryKeyColumnChanged(userID: userID, feedID: feedID, episodeID: episodeID, subscribed: false)
         try await newInstance.write(to: db)
     
@@ -293,11 +293,11 @@ final class BlackbirdTestTests: XCTestCase {
         let id = TestData.randomInt64()
         let title = TestData.titles.randomElement()!
 
-        var db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        var db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         try await SchemaChangeAddColumnsInitial(id: id, title: title).write(to: db)
         await db.close()
     
-        db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         let newInstance = SchemaChangeAddColumnsChanged(id: TestData.randomInt64(not: id), title: TestData.randomTitle, description: "Custom", url: TestData.randomURL, art: TestData.randomData(length: 2048))
         try await newInstance.write(to: db)
     
@@ -314,11 +314,11 @@ final class BlackbirdTestTests: XCTestCase {
         let id = TestData.randomInt64()
         let title = TestData.titles.randomElement()!
 
-        var db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        var db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         try await SchemaChangeAddColumnsChanged(id: id, title: title, description: "Custom", url: TestData.randomURL, art: TestData.randomData(length: 2048)).write(to: db)
         await db.close()
     
-        db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         let newInstance = SchemaChangeAddColumnsInitial(id: TestData.randomInt64(not: id), title: TestData.randomTitle)
         try await newInstance.write(to: db)
     
@@ -331,11 +331,11 @@ final class BlackbirdTestTests: XCTestCase {
         let id = TestData.randomInt64()
         let title = TestData.titles.randomElement()!
 
-        var db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        var db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         try await SchemaChangeAddIndexInitial(id: id, title: title).write(to: db)
         await db.close()
     
-        db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         let newInstance = SchemaChangeAddIndexChanged(id: TestData.randomInt64(not: id), title: TestData.randomTitle)
         try await newInstance.write(to: db)
     
@@ -348,11 +348,11 @@ final class BlackbirdTestTests: XCTestCase {
         let id = TestData.randomInt64()
         let title = TestData.titles.randomElement()!
 
-        var db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        var db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         try await SchemaChangeAddIndexChanged(id: id, title: title).write(to: db)
         await db.close()
     
-        db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         let newInstance = SchemaChangeAddIndexInitial(id: TestData.randomInt64(not: id), title: TestData.randomTitle)
         try await newInstance.write(to: db)
     
@@ -365,11 +365,11 @@ final class BlackbirdTestTests: XCTestCase {
         let id = TestData.randomInt64()
         let title = TestData.titles.randomElement()!
 
-        var db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        var db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         try await SchemaChangeRebuildTableInitial(id: id, title: title, flags: 15).write(to: db)
         await db.close()
     
-        db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         let newInstance = SchemaChangeRebuildTableChanged(id: TestData.randomInt64(not: id), title: TestData.randomTitle, flags: "{1,0}", description: TestData.randomDescription)
         try await newInstance.write(to: db)
     
@@ -380,11 +380,11 @@ final class BlackbirdTestTests: XCTestCase {
         XCTAssert(modifiedInstance!.flags == "15")
     }
     
-    var _testChangeNotificationsExpectedChangedKeys: Blackbird.PrimaryKeyValues?
+    var _testChangeNotificationsExpectedChangedKeys: ButtDB.PrimaryKeyValues?
     var _testChangeNotificationsListeners: [AnyCancellable] = []
     var _testChangeNotificationsCallCount = 0
     func testChangeNotifications() async throws {
-        let db = try Blackbird.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
+        let db = try ButtDB.Database(path: sqliteFilename, options: [.debugPrintEveryQuery, .debugPrintEveryReportedChange])
         
         try await TestModel.resolveSchema(in: db)
         try await TestModelWithDescription.resolveSchema(in: db)
@@ -401,7 +401,7 @@ final class BlackbirdTestTests: XCTestCase {
         // Batched change notifications
         let count = min(TestData.URLs.count, TestData.titles.count, TestData.descriptions.count)
         try await db.transaction { core in
-            var expectedBatchedKeys = Blackbird.PrimaryKeyValues()
+            var expectedBatchedKeys = ButtDB.PrimaryKeyValues()
             for i in 0..<count {
                 expectedBatchedKeys.insert(.integer(Int64(i)))
                 let m = TestModelWithDescription(id: i, url: TestData.URLs[i], title: TestData.titles[i], description: TestData.descriptions[i])
@@ -415,7 +415,7 @@ final class BlackbirdTestTests: XCTestCase {
         // Individual change notifications
         var m = try await TestModelWithDescription.read(from: db, id: 64)!
         m.title = "Edited title!"
-        _testChangeNotificationsExpectedChangedKeys = Blackbird.PrimaryKeyValues([ .integer(64) ])
+        _testChangeNotificationsExpectedChangedKeys = ButtDB.PrimaryKeyValues([ .integer(64) ])
         try await m.write(to: db)
         await MainActor.run { }
         XCTAssert(_testChangeNotificationsCallCount == 2)

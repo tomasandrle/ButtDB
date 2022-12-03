@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "Blackbird",
+    name: "ButtDB",
     platforms: [
         .macOS(.v12),
         .iOS(.v15),
@@ -12,17 +12,17 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "Blackbird",
-            targets: ["Blackbird"]),
+            name: "ButtDB",
+            targets: ["ButtDB"]),
     ],
     dependencies: [
     ],
     targets: [
         .target(
-            name: "Blackbird",
+            name: "ButtDB",
             dependencies: []),
         .testTarget(
-            name: "BlackbirdTests",
-            dependencies: ["Blackbird"]),
+            name: "ButtDBTests",
+            dependencies: ["ButtDB"]),
     ]
 )

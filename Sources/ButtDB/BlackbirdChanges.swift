@@ -1,5 +1,5 @@
 //
-//  BlackbirdChanges.swift
+//  ButtDBChanges.swift
 //  Created by Marco Arment on 11/17/22.
 //  Copyright (c) 2022 Marco Arment
 //
@@ -27,8 +27,8 @@
 import Foundation
 import Combine
 
-public extension Blackbird {
-    /// A Publisher that emits when data in a Blackbird table has changed.
+public extension ButtDB {
+    /// A Publisher that emits when data in a ButtDB table has changed.
     ///
     /// The ``PrimaryKeyValues`` value passed indicates which rows in the table have changed:
     /// * If the value is non-`nil`, only the rows with the given primary-key values may have changed.
@@ -36,7 +36,7 @@ public extension Blackbird {
     ///
     /// ## Example
     /// ```swift
-    /// let db = try Blackbird.Database.inMemoryDatabase()
+    /// let db = try ButtDB.Database.inMemoryDatabase()
     /// // ...
     ///
     /// let listener = MyModel.changePublisher(in: db).sink { keys in
@@ -46,20 +46,20 @@ public extension Blackbird {
     ///
     typealias ChangePublisher = PassthroughSubject<PrimaryKeyValues?, Never>
 
-    static let legacyChangeNotification = NSNotification.Name("BlackbirdTableChangeNotification")
-    static let legacyChangeNotificationTableKey = "BlackbirdChangedTable"
-    static let legacyChangeNotificationPrimaryKeyValuesKey = "BlackbirdChangedPrimaryKeyValues"
+    static let legacyChangeNotification = NSNotification.Name("ButtDBTableChangeNotification")
+    static let legacyChangeNotificationTableKey = "ButtDBChangedTable"
+    static let legacyChangeNotificationPrimaryKeyValuesKey = "ButtDBChangedPrimaryKeyValues"
 }
 
-extension Blackbird.Database {
+extension ButtDB.Database {
     internal class ChangeReporter {
-        private var lock = Blackbird.Lock()
+        private var lock = ButtDB.Lock()
         private var flushIsEnqueued = false
         private var activeTransactions = Set<Int64>()
         private var ignoreWritesToTableName: String? = nil
-        private var accumulatedChangesPerKey: [String: Blackbird.PrimaryKeyValues] = [:]
+        private var accumulatedChangesPerKey: [String: ButtDB.PrimaryKeyValues] = [:]
         private var accumulatedChangesForEntireTables = Set<String>()
-        private var tableChangePublishers: [String: Blackbird.ChangePublisher] = [:]
+        private var tableChangePublishers: [String: ButtDB.ChangePublisher] = [:]
         
         private var sendLegacyChangeNotifications = false
         private var debugPrintEveryReportedChange = false
@@ -69,10 +69,10 @@ extension Blackbird.Database {
             sendLegacyChangeNotifications = options.contains(.sendLegacyChangeNotifications)
         }
 
-        public func changePublisher(for tableName: String) -> Blackbird.ChangePublisher {
+        public func changePublisher(for tableName: String) -> ButtDB.ChangePublisher {
             lock.withLock {
                 if let existing = tableChangePublishers[tableName] { return existing }
-                let publisher = Blackbird.ChangePublisher()
+                let publisher = ButtDB.ChangePublisher()
                 tableChangePublishers[tableName] = publisher
                 return publisher
             }
@@ -106,11 +106,11 @@ extension Blackbird.Database {
             lock.unlock()
         }
 
-        public func reportChange(tableName: String, primaryKey: Blackbird.Value? = nil) {
+        public func reportChange(tableName: String, primaryKey: ButtDB.Value? = nil) {
             lock.lock()
             if tableName != ignoreWritesToTableName {
                 if let primaryKey {
-                    if accumulatedChangesPerKey[tableName] == nil { accumulatedChangesPerKey[tableName] = Blackbird.PrimaryKeyValues() }
+                    if accumulatedChangesPerKey[tableName] == nil { accumulatedChangesPerKey[tableName] = ButtDB.PrimaryKeyValues() }
                     accumulatedChangesPerKey[tableName]!.insert(primaryKey)
                 } else {
                     accumulatedChangesForEntireTables.insert(tableName)
@@ -135,23 +135,23 @@ extension Blackbird.Database {
             lock.unlock()
 
             for tableName in byEntireTable {
-                if debugPrintEveryReportedChange { print("[Blackbird.ChangeReporter] changed \(tableName) (all/unknown)") }
+                if debugPrintEveryReportedChange { print("[ButtDB.ChangeReporter] changed \(tableName) (all/unknown)") }
                 byTableAndKeys.removeValue(forKey: tableName)
                 if let publisher = publishers[tableName] { publisher.send(nil) }
                 if sendLegacyChangeNotifications { sendLegacyNotification(tableName: tableName, changedKeys: nil) }
             }
             
             for (tableName, keys) in byTableAndKeys {
-                if debugPrintEveryReportedChange { print("[Blackbird.ChangeReporter] changed \(tableName) (\(keys.count) keys)") }
+                if debugPrintEveryReportedChange { print("[ButtDB.ChangeReporter] changed \(tableName) (\(keys.count) keys)") }
                 if let publisher = publishers[tableName] { publisher.send(keys) }
                 if sendLegacyChangeNotifications { sendLegacyNotification(tableName: tableName, changedKeys: keys) }
             }
         }
         
-        private func sendLegacyNotification(tableName: String, changedKeys: Blackbird.PrimaryKeyValues?) {
-            var userInfo: [AnyHashable: Any] = [Blackbird.legacyChangeNotificationTableKey: tableName]
-            if let changedKeys { userInfo[Blackbird.legacyChangeNotificationPrimaryKeyValuesKey] = changedKeys.map { $0.objcValue() } }
-            NotificationCenter.default.post(name: Blackbird.legacyChangeNotification, object: tableName, userInfo: userInfo)
+        private func sendLegacyNotification(tableName: String, changedKeys: ButtDB.PrimaryKeyValues?) {
+            var userInfo: [AnyHashable: Any] = [ButtDB.legacyChangeNotificationTableKey: tableName]
+            if let changedKeys { userInfo[ButtDB.legacyChangeNotificationPrimaryKeyValuesKey] = changedKeys.map { $0.objcValue() } }
+            NotificationCenter.default.post(name: ButtDB.legacyChangeNotification, object: tableName, userInfo: userInfo)
         }
     }
 }

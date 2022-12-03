@@ -1,5 +1,5 @@
 //
-//  BlackbirdObjCTestsTests.m
+//  ButtDBObjCTestsTests.m
 //  Created by Marco Arment on 11/29/22.
 //  Copyright (c) 2022 Marco Arment
 //
@@ -25,15 +25,15 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "BlackbirdModelObjC.h"
+#import "ButtDBModelObjC.h"
 #import "TestModels.h"
 
-@interface BlackbirdObjCTestsTests : XCTestCase {
+@interface ButtDBObjCTestsTests : XCTestCase {
     NSString *sqliteFilename;
 }
 @end
 
-@implementation BlackbirdObjCTestsTests
+@implementation ButtDBObjCTestsTests
 
 - (void)setUp {
     uint64_t random;
@@ -50,7 +50,7 @@
 }
 
 - (void)testBasics {
-    BlackbirdDatabaseObjC *db = [[BlackbirdDatabaseObjC alloc] initWithPath:sqliteFilename debugLogging:YES];
+    ButtDBDatabaseObjC *db = [[ButtDBDatabaseObjC alloc] initWithPath:sqliteFilename debugLogging:YES];
 
     TestModel *t = [TestModel new];
     t.id = 123456;
@@ -73,7 +73,7 @@
 }
 
 - (void)testSchemaChangeAddColumn {
-    BlackbirdDatabaseObjC *db = [[BlackbirdDatabaseObjC alloc] initWithPath:sqliteFilename debugLogging:YES];
+    ButtDBDatabaseObjC *db = [[ButtDBDatabaseObjC alloc] initWithPath:sqliteFilename debugLogging:YES];
 
     TestModelSchemaAddColumnInitial *a = [TestModelSchemaAddColumnInitial new];
     a.id = 7890;
@@ -81,7 +81,7 @@
     [a writeToDatabaseSync:db];
     [db closeSync];
     
-    db = [[BlackbirdDatabaseObjC alloc] initWithPath:sqliteFilename debugLogging:YES];
+    db = [[ButtDBDatabaseObjC alloc] initWithPath:sqliteFilename debugLogging:YES];
     TestModelSchemaAddColumnChanged *b = [TestModelSchemaAddColumnChanged readFromDatabaseSync:db withID:@7890];
     XCTAssertNotNil(b);
     XCTAssert([b.title isEqualToString:a.title]);
@@ -97,7 +97,7 @@
 }
 
 - (void)testSchemaChangeDropColumn {
-    BlackbirdDatabaseObjC *db = [[BlackbirdDatabaseObjC alloc] initWithPath:sqliteFilename debugLogging:YES];
+    ButtDBDatabaseObjC *db = [[ButtDBDatabaseObjC alloc] initWithPath:sqliteFilename debugLogging:YES];
 
     TestModelSchemaAddColumnChanged *a = [TestModelSchemaAddColumnChanged new];
     a.id = 7890;
@@ -106,7 +106,7 @@
     [a writeToDatabaseSync:db];
     [db closeSync];
     
-    db = [[BlackbirdDatabaseObjC alloc] initWithPath:sqliteFilename debugLogging:YES];
+    db = [[ButtDBDatabaseObjC alloc] initWithPath:sqliteFilename debugLogging:YES];
     TestModelSchemaAddColumnInitial *b = [TestModelSchemaAddColumnInitial readFromDatabaseSync:db withID:@7890];
     XCTAssertNotNil(b);
     XCTAssert([b.title isEqualToString:a.title]);

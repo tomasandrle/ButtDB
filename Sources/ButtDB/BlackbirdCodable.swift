@@ -1,5 +1,5 @@
 //
-//  BlackbirdCodable.swift
+//  ButtDBCodable.swift
 //  Created by Marco Arment on 11/7/22.
 //  Copyright (c) 2022 Marco Arment
 //
@@ -28,14 +28,14 @@ import Foundation
 
 // with significant thanks to (and borrowing from) https://shareup.app/blog/encoding-and-decoding-sqlite-in-swift/
 
-internal class BlackbirdSQLiteEncoder: Encoder {
+internal class ButtDBSQLiteEncoder: Encoder {
     fileprivate class Storage {
-        private var elements = Blackbird.Arguments()
-        var arguments: Blackbird.Arguments { elements }
+        private var elements = ButtDB.Arguments()
+        var arguments: ButtDB.Arguments { elements }
 
         func reset() { elements.removeAll(keepingCapacity: true) }
 
-        subscript(key: String) -> Blackbird.Value? {
+        subscript(key: String) -> ButtDB.Value? {
             get { elements[key] }
             set { elements[key] = newValue }
         }
@@ -45,27 +45,27 @@ internal class BlackbirdSQLiteEncoder: Encoder {
     private let storage = Storage()
     public var userInfo: [CodingUserInfoKey : Any] = [:]
     
-    func sqliteArguments() -> Blackbird.Arguments { return storage.arguments }
+    func sqliteArguments() -> ButtDB.Arguments { return storage.arguments }
     
     public func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
         storage.reset()
-        return KeyedEncodingContainer(BlackbirdSQLiteKeyedEncodingContainer<Key>(storage))
+        return KeyedEncodingContainer(ButtDBSQLiteKeyedEncodingContainer<Key>(storage))
     }
     
     public func unkeyedContainer() -> UnkeyedEncodingContainer { fatalError("unsupported") }
     public func singleValueContainer() -> SingleValueEncodingContainer { fatalError("unsupported") }
 }
 
-internal struct BlackbirdSQLiteKeyedEncodingContainer<K: CodingKey>: KeyedEncodingContainerProtocol {
+internal struct ButtDBSQLiteKeyedEncodingContainer<K: CodingKey>: KeyedEncodingContainerProtocol {
     public typealias Key = K
     public var codingPath: [CodingKey] = []
-    private var storage: BlackbirdSQLiteEncoder.Storage
+    private var storage: ButtDBSQLiteEncoder.Storage
 
     public enum Error: Swift.Error {
         case invalidValue(String, value: String)
     }
 
-    fileprivate init(_ storage: BlackbirdSQLiteEncoder.Storage) {
+    fileprivate init(_ storage: ButtDBSQLiteEncoder.Storage) {
         self.storage = storage
     }
     
@@ -166,7 +166,7 @@ internal struct BlackbirdSQLiteKeyedEncodingContainer<K: CodingKey>: KeyedEncodi
     }
 }
 
-internal class BlackbirdSQLiteDecoder: Decoder {
+internal class ButtDBSQLiteDecoder: Decoder {
     public enum Error: Swift.Error {
         case invalidValue(String, value: String)
         case missingValue(String)
@@ -175,26 +175,26 @@ internal class BlackbirdSQLiteDecoder: Decoder {
     public var codingPath: [CodingKey] = []
     public var userInfo: [CodingUserInfoKey : Any] = [:]
 
-    let row: Blackbird.Row
-    init(_ row: Blackbird.Row) {
+    let row: ButtDB.Row
+    init(_ row: ButtDB.Row) {
         self.row = row
     }
 
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        return KeyedDecodingContainer(BlackbirdSQLiteKeyedDecodingContainer<Key>(row))
+        return KeyedDecodingContainer(ButtDBSQLiteKeyedDecodingContainer<Key>(row))
     }
 
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer { fatalError("unsupported") }
     public func singleValueContainer() throws -> SingleValueDecodingContainer { fatalError("unsupported") }
 }
 
-fileprivate class BlackbirdSQLiteKeyedDecodingContainer<K: CodingKey>: KeyedDecodingContainerProtocol {
+fileprivate class ButtDBSQLiteKeyedDecodingContainer<K: CodingKey>: KeyedDecodingContainerProtocol {
     typealias Key = K
     let codingPath: [CodingKey] = []
     
-    var row: Blackbird.Row
+    var row: ButtDB.Row
     
-    init(_ row: Blackbird.Row) {
+    init(_ row: ButtDB.Row) {
         self.row = row
     }
     
@@ -203,82 +203,82 @@ fileprivate class BlackbirdSQLiteKeyedDecodingContainer<K: CodingKey>: KeyedDeco
     func contains(_ key: K) -> Bool { row[key.stringValue] != nil }
     
     func decodeNil(forKey key: K) throws -> Bool {
-        guard let value = row[key.stringValue] else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue] else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         if case .null = value { return true } else { return false }
     }
     
     func decode(_ type: Bool.Type, forKey key: K) throws -> Bool {
-        guard let value = row[key.stringValue]?.boolValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.boolValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return value
     }
     
     func decode(_ type: String.Type, forKey key: K) throws -> String {
-        guard let value = row[key.stringValue]?.stringValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.stringValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return value
     }
     
     func decode(_ type: Double.Type, forKey key: K) throws -> Double {
-        guard let value = row[key.stringValue]?.doubleValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.doubleValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return value
     }
     
     func decode(_ type: Float.Type, forKey key: K) throws -> Float {
-        guard let value = row[key.stringValue]?.doubleValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.doubleValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return Float(value)
     }
     
     func decode(_ type: Int.Type, forKey key: K) throws -> Int {
-        guard let value = row[key.stringValue]?.intValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.intValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return value
     }
     
     func decode(_ type: Int8.Type, forKey key: K) throws -> Int8 {
-        guard let value = row[key.stringValue]?.intValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.intValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return Int8(value)
     }
     
     func decode(_ type: Int16.Type, forKey key: K) throws -> Int16 {
-        guard let value = row[key.stringValue]?.intValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.intValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return Int16(value)
     }
     
     func decode(_ type: Int32.Type, forKey key: K) throws -> Int32 {
-        guard let value = row[key.stringValue]?.intValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.intValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return Int32(value)
     }
     
     func decode(_ type: Int64.Type, forKey key: K) throws -> Int64 {
-        guard let value = row[key.stringValue]?.intValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.intValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return Int64(value)
     }
     
     func decode(_ type: UInt.Type, forKey key: K) throws -> UInt {
-        guard let value = row[key.stringValue]?.intValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.intValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return UInt(value)
     }
     
     func decode(_ type: UInt8.Type, forKey key: K) throws -> UInt8 {
-        guard let value = row[key.stringValue]?.intValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.intValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return UInt8(value)
     }
     
     func decode(_ type: UInt16.Type, forKey key: K) throws -> UInt16 {
-        guard let value = row[key.stringValue]?.intValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.intValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return UInt16(value)
     }
     
     func decode(_ type: UInt32.Type, forKey key: K) throws -> UInt32 {
-        guard let value = row[key.stringValue]?.intValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.intValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return UInt32(value)
     }
     
     func decode(_ type: UInt64.Type, forKey key: K) throws -> UInt64 {
-        guard let value = row[key.stringValue]?.intValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.intValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return UInt64(value)
     }
 
     func decode(_: Data.Type, forKey key: K) throws -> Data {
-        guard let value = row[key.stringValue]?.dataValue else { throw BlackbirdSQLiteDecoder.Error.missingValue(key.stringValue) }
+        guard let value = row[key.stringValue]?.dataValue else { throw ButtDBSQLiteDecoder.Error.missingValue(key.stringValue) }
         return value
     }
 
@@ -289,7 +289,7 @@ fileprivate class BlackbirdSQLiteKeyedDecodingContainer<K: CodingKey>: KeyedDeco
 
     func decode(_: URL.Type, forKey key: K) throws -> URL {
         let string = try decode(String.self, forKey: key)
-        guard let url = URL(string: string) else { throw BlackbirdSQLiteDecoder.Error.invalidValue(key.stringValue, value: string) }
+        guard let url = URL(string: string) else { throw ButtDBSQLiteDecoder.Error.invalidValue(key.stringValue, value: string) }
         return url
     }
 
@@ -297,7 +297,7 @@ fileprivate class BlackbirdSQLiteKeyedDecodingContainer<K: CodingKey>: KeyedDeco
         if Data.self == T.self { return try decode(Data.self, forKey: key) as! T }
         if Date.self == T.self { return try decode(Date.self, forKey: key) as! T }
         if URL.self == T.self  { return try decode(URL.self,  forKey: key) as! T }
-        throw BlackbirdSQLiteDecoder.Error.invalidValue(key.stringValue, value: key.stringValue)
+        throw ButtDBSQLiteDecoder.Error.invalidValue(key.stringValue, value: key.stringValue)
     }
     
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: K) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {

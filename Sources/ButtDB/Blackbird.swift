@@ -1,5 +1,5 @@
 //
-//  Blackbird.swift
+//  ButtDB.swift
 //  Created by Marco Arment on 11/6/22.
 //  Copyright (c) 2022 Marco Arment
 //
@@ -28,10 +28,10 @@ import Foundation
 import SQLite3
 
 /// A small, fast, lightweight SQLite database wrapper and model layer.
-public class Blackbird {
-    public typealias Row = Dictionary<String, Blackbird.Value>
-    public typealias Arguments = Dictionary<String, Blackbird.Value>
-    public typealias PrimaryKeyValues = Set<Blackbird.Value>
+public class ButtDB {
+    public typealias Row = Dictionary<String, ButtDB.Value>
+    public typealias Arguments = Dictionary<String, ButtDB.Value>
+    public typealias PrimaryKeyValues = Set<ButtDB.Value>
 
     /// A wrapper for SQLite's column data types.
     public enum Value: ExpressibleByStringLiteral, ExpressibleByFloatLiteral, ExpressibleByBooleanLiteral, ExpressibleByIntegerLiteral, Hashable {
@@ -178,21 +178,21 @@ public class Blackbird {
         
         private static let copyValue = unsafeBitCast(-1, to: sqlite3_destructor_type.self) // a.k.a. SQLITE_TRANSIENT
         
-        internal func bind(database: isolated Blackbird.Database.Core, statement: OpaquePointer, index: Int32, for query: String) throws {
+        internal func bind(database: isolated ButtDB.Database.Core, statement: OpaquePointer, index: Int32, for query: String) throws {
             var result: Int32
             switch self {
                 case     .null:       result = sqlite3_bind_null(statement, index)
                 case let .integer(i): result = sqlite3_bind_int64(statement, index, i)
                 case let .double(d):  result = sqlite3_bind_double(statement, index, d)
-                case let .text(s):    result = sqlite3_bind_text(statement, index, s, -1, Blackbird.Value.copyValue)
-                case let .data(d):    result = d.withUnsafeBytes { bytes in sqlite3_bind_blob(statement, index, bytes.baseAddress, Int32(bytes.count), Blackbird.Value.copyValue) }
+                case let .text(s):    result = sqlite3_bind_text(statement, index, s, -1, ButtDB.Value.copyValue)
+                case let .data(d):    result = d.withUnsafeBytes { bytes in sqlite3_bind_blob(statement, index, bytes.baseAddress, Int32(bytes.count), ButtDB.Value.copyValue) }
             }
-            if result != SQLITE_OK { throw Blackbird.Database.Error.queryArgumentValueError(query: query, description: database.errorDesc(database.dbHandle)) }
+            if result != SQLITE_OK { throw ButtDB.Database.Error.queryArgumentValueError(query: query, description: database.errorDesc(database.dbHandle)) }
         }
         
-        internal func bind(database: isolated Blackbird.Database.Core, statement: OpaquePointer, name: String, for query: String) throws {
+        internal func bind(database: isolated ButtDB.Database.Core, statement: OpaquePointer, name: String, for query: String) throws {
             let idx = sqlite3_bind_parameter_index(statement, name)
-            if idx == 0 { throw Blackbird.Database.Error.queryArgumentNameError(query: query, name: name) }
+            if idx == 0 { throw ButtDB.Database.Error.queryArgumentNameError(query: query, name: name) }
             return try bind(database: database, statement: statement, index: idx, for: query)
         }
     }
@@ -200,12 +200,12 @@ public class Blackbird {
 
 // MARK: - Utilities
 
-internal protocol BlackbirdLock {
+internal protocol ButtDBLock {
     func lock()
     func unlock()
     @discardableResult func withLock<R>(_ body: () throws -> R) rethrows -> R where R : Sendable
 }
-extension BlackbirdLock {
+extension ButtDBLock {
     @discardableResult internal func withLock<R>(_ body: () throws -> R) rethrows -> R where R : Sendable {
         lock()
         defer { unlock() }
@@ -214,8 +214,8 @@ extension BlackbirdLock {
 }
 
 import os
-extension Blackbird {
-    internal static func Lock() -> BlackbirdLock {
+extension ButtDB {
+    internal static func Lock() -> ButtDBLock {
         if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
             return UnfairLock()
         } else {
@@ -224,13 +224,13 @@ extension Blackbird {
     }
 
     @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    fileprivate class UnfairLock: BlackbirdLock {
+    fileprivate class UnfairLock: ButtDBLock {
         private let _lock = OSAllocatedUnfairLock()
         internal func lock() { _lock.lock() }
         internal func unlock() { _lock.unlock() }
     }
 
-    fileprivate class LegacyUnfairLock: BlackbirdLock {
+    fileprivate class LegacyUnfairLock: ButtDBLock {
         private var _lock: UnsafeMutablePointer<os_unfair_lock>
         internal func lock()   { os_unfair_lock_lock(_lock) }
         internal func unlock() { os_unfair_lock_unlock(_lock) }

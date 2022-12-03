@@ -1,5 +1,5 @@
 //
-//  BlackbirdSchema.swift
+//  ButtDBSchema.swift
 //  Created by Marco Arment on 11/18/22.
 //  Copyright (c) 2022 Marco Arment
 //
@@ -28,7 +28,7 @@ import Foundation
 
 // MARK: - Schema
 
-extension Blackbird {
+extension ButtDB {
 
     /// The SQLite data type for a ``Column`` in a ``Table``.
     ///
@@ -43,7 +43,7 @@ extension Blackbird {
     /// `.text` |  Empty string (`""`)
     /// `.data` |  Empty data
     ///
-    /// Custom default values for columns are not supported by Blackbird.
+    /// Custom default values for columns are not supported by ButtDB.
     public enum ColumnType {
 
         /// Stored as a **signed** integer up to 64-bit.
@@ -118,10 +118,10 @@ extension Blackbird {
         }
         
         
-        /// Defines a single column in a ``Blackbird/Table``.
+        /// Defines a single column in a ``ButtDB/Table``.
         /// - Parameters:
         ///   - name: The column name. Must not be empty.
-        ///   - type: A ``Blackbird/ColumnType``.
+        ///   - type: A ``ButtDB/ColumnType``.
         ///   - mayBeNull: Whether this column may be `NULL` in the database and `nil` in the model, which requires the corresponding model property to be an optional type.
         public init(name: String, type: ColumnType, mayBeNull: Bool = false) {
             self.name = name
@@ -170,7 +170,7 @@ extension Blackbird {
             return "CREATE \(unique ? "UNIQUE " : "")INDEX IF NOT EXISTS \(name) ON \(tableName) (\(columnNames.joined(separator: ",")))"
         }
         
-        /// Defines a single [SQLite index](https://www.sqlite.org/lang_createindex.html) in a ``Blackbird/Table``.
+        /// Defines a single [SQLite index](https://www.sqlite.org/lang_createindex.html) in a ``ButtDB/Table``.
         /// - Parameters:
         ///   - columnNames: An array of strings of the column names to index, in order.
         ///   - unique: Whether this index requires values to be unique. `NULL` values are exempt from the uniqueness requirement.
@@ -235,16 +235,16 @@ extension Blackbird {
         private static var resolvedTableNamesInDatabases: [Database.InstanceID : Set<String>] = [:]
         private static var resolvedTablesLock = Lock()
         
-        /// Defines the schema of an SQLite table in a ``Blackbird/Database`` for a type conforming to ``BlackbirdModel``.
+        /// Defines the schema of an SQLite table in a ``ButtDB/Database`` for a type conforming to ``ButtDBModel``.
         /// - Parameters:
         ///   - name: A custom name for the table.
         ///
-        ///       **Default:** The ``BlackbirdModel``-conforming type's name.
-        ///   - columns: An array of ``Blackbird/Column`` definitions. Must not be empty.
+        ///       **Default:** The ``ButtDBModel``-conforming type's name.
+        ///   - columns: An array of ``ButtDB/Column`` definitions. Must not be empty.
         ///   - primaryKeyColumnNames: An array of column names to define the primary key.
         ///
         ///       **Default:** `["id"]`
-        ///   - indexes: An array of ``Blackbird/Index`` definitions for any additional indexed columns. The primary key is implicitly indexed and should not be included here.
+        ///   - indexes: An array of ``ButtDB/Index`` definitions for any additional indexed columns. The primary key is implicitly indexed and should not be included here.
         public init(name: String? = nil, columns: [Column], primaryKeyColumnNames: [String] = ["id"], indexes: [Index] = []) {
             if columns.isEmpty { fatalError("No columns specified") }
             
@@ -306,7 +306,7 @@ extension Blackbird {
             return Self.resolvedTablesLock.withLock {
                 let alreadyResolved = Self.resolvedTablesWithDatabases[self]?.contains(database.id) ?? false
                 if !alreadyResolved, case let name = name(type: type), Self.resolvedTableNamesInDatabases[database.id]?.contains(name) ?? false {
-                    fatalError("Multiple BlackbirdModel types cannot use the same table name (\"\(name)\") in one Database")
+                    fatalError("Multiple ButtDBModel types cannot use the same table name (\"\(name)\") in one Database")
                 }
                 return alreadyResolved
             }

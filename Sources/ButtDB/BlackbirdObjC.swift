@@ -1,5 +1,5 @@
 //
-//  BlackbirdObjC.swift
+//  ButtDBObjC.swift
 //  Created by Marco Arment on 11/29/22.
 //  Copyright (c) 2022 Marco Arment
 //
@@ -26,7 +26,7 @@
 //
 //  ***************************************************************************************************
 //  *                                                                                                 *
-//  *    This file can be omitted from projects that don't need Blackbird access from Objective-C.    *
+//  *    This file can be omitted from projects that don't need ButtDB access from Objective-C.    *
 //  *                                                                                                 *
 //  ***************************************************************************************************
 //
@@ -34,11 +34,11 @@
 import Foundation
 
 fileprivate func raiseObjCException(_ error: Error) -> Never {
-    NSException(name: NSExceptionName(rawValue: "BlackbirdException"), reason: error.localizedDescription).raise()
+    NSException(name: NSExceptionName(rawValue: "ButtDBException"), reason: error.localizedDescription).raise()
     fatalError() // will never execute, but tricks Swift into accepting the Never return type
 }
 
-extension Blackbird.Value {
+extension ButtDB.Value {
     internal func objcValue() -> NSObject {
         switch self {
             case .null:           return NSNull()
@@ -50,82 +50,82 @@ extension Blackbird.Value {
     }
 }
 
-extension Blackbird.Row {
+extension ButtDB.Row {
     internal func objcRow() -> [String: NSObject] { self.mapValues { $0.objcValue() } }
 }
 
-/// Objective-C version of ``Blackbird/ColumnType``.
-@objc public enum BlackbirdColumnTypeObjC: Int {
+/// Objective-C version of ``ButtDB/ColumnType``.
+@objc public enum ButtDBColumnTypeObjC: Int {
     case integer
     case double
     case text
     case data
     
-    internal func columnType() -> Blackbird.ColumnType {
+    internal func columnType() -> ButtDB.ColumnType {
         switch self {
-            case .integer: return Blackbird.ColumnType.integer
-            case .double:  return Blackbird.ColumnType.double
-            case .text:    return Blackbird.ColumnType.text
-            case .data:    return Blackbird.ColumnType.data
+            case .integer: return ButtDB.ColumnType.integer
+            case .double:  return ButtDB.ColumnType.double
+            case .text:    return ButtDB.ColumnType.text
+            case .data:    return ButtDB.ColumnType.data
         }
     }
 }
 
-/// Objective-C wrapper for ``Blackbird/Column``.
-@objc public class BlackbirdColumnObjC: NSObject {
+/// Objective-C wrapper for ``ButtDB/Column``.
+@objc public class ButtDBColumnObjC: NSObject {
     @objc public let name: String
-    internal let column: Blackbird.Column
+    internal let column: ButtDB.Column
     
-    /// Objective-C version of ``Blackbird/Column/init(name:type:mayBeNull:)``.
-    @objc public class func column(name: String, type: BlackbirdColumnTypeObjC, mayBeNull: Bool) -> BlackbirdColumnObjC {
-        BlackbirdColumnObjC(name: name, type: type, mayBeNull: mayBeNull)
+    /// Objective-C version of ``ButtDB/Column/init(name:type:mayBeNull:)``.
+    @objc public class func column(name: String, type: ButtDBColumnTypeObjC, mayBeNull: Bool) -> ButtDBColumnObjC {
+        ButtDBColumnObjC(name: name, type: type, mayBeNull: mayBeNull)
     }
     
-    init(name: String, type: BlackbirdColumnTypeObjC, mayBeNull: Bool) {
+    init(name: String, type: ButtDBColumnTypeObjC, mayBeNull: Bool) {
         self.name = name
-        column = Blackbird.Column(name: name, type: type.columnType(), mayBeNull: mayBeNull)
+        column = ButtDB.Column(name: name, type: type.columnType(), mayBeNull: mayBeNull)
     }
 }
 
-/// Objective-C wrapper for ``Blackbird/Index``.
-@objc public class BlackbirdIndexObjC: NSObject {
-    internal let index: Blackbird.Index
+/// Objective-C wrapper for ``ButtDB/Index``.
+@objc public class ButtDBIndexObjC: NSObject {
+    internal let index: ButtDB.Index
     
-    /// Objective-C version of ``Blackbird/Index/init(columnNames:unique:)``.
-    @objc public class func index(columNames: [String], unique: Bool) -> BlackbirdIndexObjC {
-        BlackbirdIndexObjC(columNames: columNames, unique: unique)
+    /// Objective-C version of ``ButtDB/Index/init(columnNames:unique:)``.
+    @objc public class func index(columNames: [String], unique: Bool) -> ButtDBIndexObjC {
+        ButtDBIndexObjC(columNames: columNames, unique: unique)
     }
 
     init(columNames: [String], unique: Bool) {
-        self.index = Blackbird.Index(columnNames: columNames, unique: unique)
+        self.index = ButtDB.Index(columnNames: columNames, unique: unique)
     }
 }
 
-/// Objective-C wrapper for ``Blackbird/Table``.
-@objc public class BlackbirdTableObjC: NSObject {
+/// Objective-C wrapper for ``ButtDB/Table``.
+@objc public class ButtDBTableObjC: NSObject {
     @objc public let name: String
     @objc public let columnNames: [String]
     @objc public let primaryKeyColumnNames: [String]
-    internal let table: Blackbird.Table
+    internal let table: ButtDB.Table
     
-    /// Objective-C version of ``Blackbird/Table/init(name:columns:primaryKeyColumnNames:indexes:)``.
-    @objc public class func table(name: String, columns: [BlackbirdColumnObjC], primaryKeyColumnNames: [String], indexes: [BlackbirdIndexObjC]) -> BlackbirdTableObjC {
-        BlackbirdTableObjC(name: name, columns: columns, primaryKeyColumnNames: primaryKeyColumnNames, indexes: indexes)
+    /// Objective-C version of ``ButtDB/Table/init(name:columns:primaryKeyColumnNames:indexes:)``.
+    @objc public class func table(name: String, columns: [ButtDBColumnObjC], primaryKeyColumnNames: [String], indexes: [ButtDBIndexObjC]) -> ButtDBTableObjC {
+        ButtDBTableObjC(name: name, columns: columns, primaryKeyColumnNames: primaryKeyColumnNames, indexes: indexes)
     }
     
-    init(name: String, columns: [BlackbirdColumnObjC], primaryKeyColumnNames: [String], indexes: [BlackbirdIndexObjC]) {
+    init(name: String, columns: [ButtDBColumnObjC], primaryKeyColumnNames: [String], indexes: [ButtDBIndexObjC]) {
         self.name = name
         self.columnNames = columns.map { $0.name }
         self.primaryKeyColumnNames = primaryKeyColumnNames
-        self.table = Blackbird.Table(name: name, columns: columns.map { $0.column }, primaryKeyColumnNames: primaryKeyColumnNames, indexes: indexes.map { $0.index })
+        self.table = ButtDB.Table(name: name, columns: columns.map { $0.column }, primaryKeyColumnNames: primaryKeyColumnNames, indexes: indexes.map { $0.index })
     }
 }
 
-/// Objective-C wrapper for ``Blackbird/Database``.
-@objc public class BlackbirdDatabaseObjC: NSObject {
+/// Objective-C wrapper for ``ButtDB/Database``.
+@objc public class ButtDBDatabaseObjC: NSObject {
 
     /// The wrapped database, accessible for use from Swift.
-    public let db: Blackbird.Database
+    public let db: ButtDB.Database
 
     fileprivate var cachedTableNames = Set<String>()
     
@@ -136,18 +136,18 @@ extension Blackbird.Row {
     /// - Returns: The created instance, or `nil` if the instance could not be created at the supplied path.
     @objc public init?(path: String, debugLogging: Bool) {
         do {
-            var options: Blackbird.Database.Options = [.sendLegacyChangeNotifications]
+            var options: ButtDB.Database.Options = [.sendLegacyChangeNotifications]
             if debugLogging { options.formUnion([.debugPrintEveryQuery, .debugPrintEveryReportedChange]) }
-            db = try Blackbird.Database(path: path, options: options)
+            db = try ButtDB.Database(path: path, options: options)
         } catch {
-            print("[BlackbirdObjC] Error thrown when initializing database at [\(path)]: \(error.localizedDescription)")
+            print("[ButtDBObjC] Error thrown when initializing database at [\(path)]: \(error.localizedDescription)")
             return nil
         }
     }
     
-    /// Wraps an existing ``Blackbird/Database`` for use from Objective-C.
-    /// - Parameter database: The ``Blackbird/Database`` to wrap.
-    public init(database: Blackbird.Database) {
+    /// Wraps an existing ``ButtDB/Database`` for use from Objective-C.
+    /// - Parameter database: The ``ButtDB/Database`` to wrap.
+    public init(database: ButtDB.Database) {
         db = database
     }
 
@@ -194,7 +194,7 @@ extension Blackbird.Row {
     }
     
     /// Performs setup and any necessary schema migrations for a table.
-    @objc public func resolve(table: BlackbirdTableObjC) async {
+    @objc public func resolve(table: ButtDBTableObjC) async {
         do {
             try await db.transaction { core in
                 if cachedTableNames.contains(table.name) { return }

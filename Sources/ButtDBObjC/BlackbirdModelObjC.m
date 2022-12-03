@@ -1,5 +1,5 @@
 //
-//  BlackbirdModelObjC.m
+//  ButtDBModelObjC.m
 //  Created by Marco Arment on 11/29/22.
 //  Copyright (c) 2022 Marco Arment
 //
@@ -26,31 +26,31 @@
 //
 //  ***************************************************************************************************
 //  *                                                                                                 *
-//  *    This file can be omitted from projects that don't need Blackbird access from Objective-C.    *
+//  *    This file can be omitted from projects that don't need ButtDB access from Objective-C.    *
 //  *                                                                                                 *
 //  ***************************************************************************************************
 //
 
-#import "BlackbirdModelObjC.h"
+#import "ButtDBModelObjC.h"
 #import <Foundation/Foundation.h>
 @import Dispatch;
 
-NSString * const BlackbirdModelTableDidChangeNotification = @"BlackbirdTableChangeNotification";
-NSString * const BlackbirdModelChangedTableKey = @"BlackbirdChangedTable";
-NSString * const BlackbirdModelChangedPrimaryKeyValuesKey = @"BlackbirdChangedPrimaryKeyValues";
+NSString * const ButtDBModelTableDidChangeNotification = @"ButtDBTableChangeNotification";
+NSString * const ButtDBModelChangedTableKey = @"ButtDBChangedTable";
+NSString * const ButtDBModelChangedPrimaryKeyValuesKey = @"ButtDBChangedPrimaryKeyValues";
 
-@implementation BlackbirdModelObjC
+@implementation ButtDBModelObjC
 
-+ (BlackbirdTableObjC * _Nonnull)table {
-    [[NSException exceptionWithName:@"BlackbirdModelObjC" reason:[NSString stringWithFormat:@"+table method not implemented in %@", NSStringFromClass(self)] userInfo:nil] raise];
++ (ButtDBTableObjC * _Nonnull)table {
+    [[NSException exceptionWithName:@"ButtDBModelObjC" reason:[NSString stringWithFormat:@"+table method not implemented in %@", NSStringFromClass(self)] userInfo:nil] raise];
     return nil;
 }
 
-+ (void)resolveInDatabase:(BlackbirdDatabaseObjC * _Nonnull)database completion:(void (^ _Nullable)(void))completion {
++ (void)resolveInDatabase:(ButtDBDatabaseObjC * _Nonnull)database completion:(void (^ _Nullable)(void))completion {
     [database resolveWithTable:self.table completionHandler:completion];
 }
 
-+ (void)resolveInDatabaseSync:(BlackbirdDatabaseObjC * _Nonnull)database {
++ (void)resolveInDatabaseSync:(ButtDBDatabaseObjC * _Nonnull)database {
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     [self resolveInDatabase:database completion:^{
         dispatch_semaphore_signal(semaphore);
@@ -58,10 +58,10 @@ NSString * const BlackbirdModelChangedPrimaryKeyValuesKey = @"BlackbirdChangedPr
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 }
 
-+ (instancetype _Nullable)readFromDatabaseSync:(BlackbirdDatabaseObjC * _Nonnull)database withID:(id _Nonnull)idValue {
++ (instancetype _Nullable)readFromDatabaseSync:(ButtDBDatabaseObjC * _Nonnull)database withID:(id _Nonnull)idValue {
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    __block BlackbirdModelObjC *result = nil;
-    [self readFromDatabase:database withID:idValue completion:^(BlackbirdModelObjC * _Nullable r) {
+    __block ButtDBModelObjC *result = nil;
+    [self readFromDatabase:database withID:idValue completion:^(ButtDBModelObjC * _Nullable r) {
         result = r;
         dispatch_semaphore_signal(semaphore);
     }];
@@ -69,22 +69,22 @@ NSString * const BlackbirdModelChangedPrimaryKeyValuesKey = @"BlackbirdChangedPr
     return result;
 }
 
-+ (void)readFromDatabase:(BlackbirdDatabaseObjC * _Nonnull)database withID:(id _Nonnull)idValue completion:(void (^ _Nullable)(BlackbirdModelObjC * _Nullable))completion {
++ (void)readFromDatabase:(ButtDBDatabaseObjC * _Nonnull)database withID:(id _Nonnull)idValue completion:(void (^ _Nullable)(ButtDBModelObjC * _Nullable))completion {
     [self readFromDatabase:database where:@"id = ?" arguments:@[idValue] completion:^(NSArray *results){
         if (completion) completion(results.firstObject);
     }];
 }
 
-+ (void)readFromDatabase:(BlackbirdDatabaseObjC * _Nonnull)database where:(NSString * _Nonnull)where arguments:(NSArray * _Nullable)arguments completion:(void (^ _Nullable)(NSArray<BlackbirdModelObjC *> * _Nonnull))completion {
-    BlackbirdTableObjC *table = self.table;
++ (void)readFromDatabase:(ButtDBDatabaseObjC * _Nonnull)database where:(NSString * _Nonnull)where arguments:(NSArray * _Nullable)arguments completion:(void (^ _Nullable)(NSArray<ButtDBModelObjC *> * _Nonnull))completion {
+    ButtDBTableObjC *table = self.table;
     [database resolveWithTable:table completionHandler:^{
         NSString *query = [NSString stringWithFormat:@"SELECT * FROM `%@` WHERE %@", table.name, where ?: @"1"];
         [database query:query arguments:(arguments ?: @[]) completionHandler:^(NSArray<NSDictionary<NSString *,NSObject *> *> * _Nonnull rows) {
             if (! completion) return;
             
-            NSMutableArray<BlackbirdModelObjC *> *results = [NSMutableArray array];
+            NSMutableArray<ButtDBModelObjC *> *results = [NSMutableArray array];
             for (NSDictionary<NSString *, id> *row in rows) {
-                BlackbirdModelObjC *instance = [self new];
+                ButtDBModelObjC *instance = [self new];
                 [row enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
                     if (obj == NSNull.null) [instance setValue:nil forKey:key];
                     else [instance setValue:obj forKey:key];
@@ -96,10 +96,10 @@ NSString * const BlackbirdModelChangedPrimaryKeyValuesKey = @"BlackbirdChangedPr
     }];
 }
 
-+ (NSArray<BlackbirdModelObjC *> * _Nonnull)readFromDatabaseSync:(BlackbirdDatabaseObjC * _Nonnull)database where:(NSString * _Nonnull)where arguments:(NSArray * _Nullable)arguments {
++ (NSArray<ButtDBModelObjC *> * _Nonnull)readFromDatabaseSync:(ButtDBDatabaseObjC * _Nonnull)database where:(NSString * _Nonnull)where arguments:(NSArray * _Nullable)arguments {
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    __block NSArray<BlackbirdModelObjC *> *results = nil;
-    [self readFromDatabase:database where:where arguments:arguments completion:^(NSArray<BlackbirdModelObjC *> * _Nonnull r) {
+    __block NSArray<ButtDBModelObjC *> *results = nil;
+    [self readFromDatabase:database where:where arguments:arguments completion:^(NSArray<ButtDBModelObjC *> * _Nonnull r) {
         results = r;
         dispatch_semaphore_signal(semaphore);
     }];
@@ -107,8 +107,8 @@ NSString * const BlackbirdModelChangedPrimaryKeyValuesKey = @"BlackbirdChangedPr
     return results;
 }
 
-- (void)writeToDatabase:(BlackbirdDatabaseObjC * _Nonnull)database completion:(void (^ _Nullable)(void))completion {
-    BlackbirdTableObjC *table = self.class.table;
+- (void)writeToDatabase:(ButtDBDatabaseObjC * _Nonnull)database completion:(void (^ _Nullable)(void))completion {
+    ButtDBTableObjC *table = self.class.table;
     [database resolveWithTable:table completionHandler:^{
         NSMutableArray *arguments = [NSMutableArray array];
         NSMutableArray<NSString *> *placeholders = [NSMutableArray array];
@@ -129,7 +129,7 @@ NSString * const BlackbirdModelChangedPrimaryKeyValuesKey = @"BlackbirdChangedPr
     }];
 }
 
-- (void)writeToDatabaseSync:(BlackbirdDatabaseObjC * _Nonnull)database {
+- (void)writeToDatabaseSync:(ButtDBDatabaseObjC * _Nonnull)database {
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     [self writeToDatabase:database completion:^{
         dispatch_semaphore_signal(semaphore);
@@ -137,8 +137,8 @@ NSString * const BlackbirdModelChangedPrimaryKeyValuesKey = @"BlackbirdChangedPr
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 }
 
-- (void)deleteFromDatabase:(BlackbirdDatabaseObjC * _Nonnull)database completion:(void (^ _Nullable)(void))completion {
-    BlackbirdTableObjC *table = self.class.table;
+- (void)deleteFromDatabase:(ButtDBDatabaseObjC * _Nonnull)database completion:(void (^ _Nullable)(void))completion {
+    ButtDBTableObjC *table = self.class.table;
     [database resolveWithTable:table completionHandler:^{
         NSMutableArray *arguments = [NSMutableArray array];
         NSMutableArray<NSString *> *andClauses = [NSMutableArray array];
@@ -154,7 +154,7 @@ NSString * const BlackbirdModelChangedPrimaryKeyValuesKey = @"BlackbirdChangedPr
     }];
 }
 
-- (void)deleteFromDatabaseSync:(BlackbirdDatabaseObjC * _Nonnull)database {
+- (void)deleteFromDatabaseSync:(ButtDBDatabaseObjC * _Nonnull)database {
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     [self deleteFromDatabase:database completion:^{
         dispatch_semaphore_signal(semaphore);

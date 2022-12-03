@@ -27,30 +27,30 @@
 #import "TestModels.h"
 
 @implementation TestModel
-+ (BlackbirdTableObjC *)table {
-    return [BlackbirdTableObjC
++ (ButtDBTableObjC *)table {
+    return [ButtDBTableObjC
         tableWithName:NSStringFromClass(self)
         columns:@[
-            [BlackbirdColumnObjC columnWithName:@"id"    type:BlackbirdColumnTypeObjCInteger mayBeNull:NO],
-            [BlackbirdColumnObjC columnWithName:@"title" type:BlackbirdColumnTypeObjCText mayBeNull:YES],
-            [BlackbirdColumnObjC columnWithName:@"score" type:BlackbirdColumnTypeObjCDouble mayBeNull:NO],
-            [BlackbirdColumnObjC columnWithName:@"art"   type:BlackbirdColumnTypeObjCData mayBeNull:YES],
+            [ButtDBColumnObjC columnWithName:@"id"    type:ButtDBColumnTypeObjCInteger mayBeNull:NO],
+            [ButtDBColumnObjC columnWithName:@"title" type:ButtDBColumnTypeObjCText mayBeNull:YES],
+            [ButtDBColumnObjC columnWithName:@"score" type:ButtDBColumnTypeObjCDouble mayBeNull:NO],
+            [ButtDBColumnObjC columnWithName:@"art"   type:ButtDBColumnTypeObjCData mayBeNull:YES],
         ]
         primaryKeyColumnNames:@[ @"id" ]
         indexes:@[
-            [BlackbirdIndexObjC indexWithColumNames:@[ @"title" ] unique:NO],
+            [ButtDBIndexObjC indexWithColumNames:@[ @"title" ] unique:NO],
         ]
     ];
 }
 @end
 
 @implementation TestModelSchemaAddColumnInitial
-+ (BlackbirdTableObjC *)table {
-    return [BlackbirdTableObjC
++ (ButtDBTableObjC *)table {
+    return [ButtDBTableObjC
         tableWithName:@"TestModelSchemaAddColumn"
         columns:@[
-            [BlackbirdColumnObjC columnWithName:@"id"      type:BlackbirdColumnTypeObjCInteger mayBeNull:NO],
-            [BlackbirdColumnObjC columnWithName:@"title"   type:BlackbirdColumnTypeObjCText mayBeNull:YES],
+            [ButtDBColumnObjC columnWithName:@"id"      type:ButtDBColumnTypeObjCInteger mayBeNull:NO],
+            [ButtDBColumnObjC columnWithName:@"title"   type:ButtDBColumnTypeObjCText mayBeNull:YES],
         ]
         primaryKeyColumnNames:@[ @"id" ]
         indexes:@[
@@ -61,13 +61,13 @@
 @end
 
 @implementation TestModelSchemaAddColumnChanged
-+ (BlackbirdTableObjC *)table {
-    return [BlackbirdTableObjC
++ (ButtDBTableObjC *)table {
+    return [ButtDBTableObjC
         tableWithName:@"TestModelSchemaAddColumn"
         columns:@[
-            [BlackbirdColumnObjC columnWithName:@"id"      type:BlackbirdColumnTypeObjCInteger mayBeNull:NO],
-            [BlackbirdColumnObjC columnWithName:@"title"   type:BlackbirdColumnTypeObjCText mayBeNull:YES],
-            [BlackbirdColumnObjC columnWithName:@"summary" type:BlackbirdColumnTypeObjCText mayBeNull:YES],
+            [ButtDBColumnObjC columnWithName:@"id"      type:ButtDBColumnTypeObjCInteger mayBeNull:NO],
+            [ButtDBColumnObjC columnWithName:@"title"   type:ButtDBColumnTypeObjCText mayBeNull:YES],
+            [ButtDBColumnObjC columnWithName:@"summary" type:ButtDBColumnTypeObjCText mayBeNull:YES],
         ]
         primaryKeyColumnNames:@[ @"id" ]
         indexes:@[

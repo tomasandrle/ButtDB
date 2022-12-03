@@ -1,6 +1,6 @@
 //
-//  TestModels.h
-//  Created by Marco Arment on 11/30/22.
+//  PrefixHeader.pch
+//  Created by Marco Arment on 11/29/22.
 //  Copyright (c) 2022 Marco Arment
 //
 //  Released under the MIT License
@@ -24,26 +24,9 @@
 //  SOFTWARE.
 //
 
-#import "BlackbirdModelObjC.h"
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
 
-NS_ASSUME_NONNULL_BEGIN
+#import "ButtDBObjCTestsTests-Swift.h"
 
-@interface TestModel: BlackbirdModelObjC
-@property (nonatomic) int64_t id;
-@property (nonatomic) NSString *title;
-@property (nonatomic) double score;
-@property (nonatomic) NSData *art;
-@end
-
-@interface TestModelSchemaAddColumnInitial: BlackbirdModelObjC
-@property (nonatomic) int64_t id;
-@property (nonatomic) NSString *title;
-@end
-
-@interface TestModelSchemaAddColumnChanged: BlackbirdModelObjC
-@property (nonatomic) int64_t id;
-@property (nonatomic) NSString *title;
-@property (nonatomic) NSString *summary;
-@end
-
-NS_ASSUME_NONNULL_END
+#endif /* PrefixHeader_pch */

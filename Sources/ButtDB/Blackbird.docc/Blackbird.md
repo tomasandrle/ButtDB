@@ -1,4 +1,4 @@
-#  ``Blackbird``
+#  ``ButtDB``
 
 A lightweight, asynchronous SQLite wrapper and model layer.
 
@@ -8,15 +8,15 @@ A small, fast, lightweight SQLite database wrapper and model layer, based on mod
 
 ## Topics
 
-### Blackbird
+### ButtDB
 
-- ``Blackbird/Database``
-- ``BlackbirdModel``
+- ``ButtDB/Database``
+- ``ButtDBModel``
 
 ### Optional Objective-C compatibility
 
-- ``BlackbirdDatabaseObjC``
-- ``BlackbirdTableObjC``
-- ``BlackbirdColumnObjC``
-- ``BlackbirdColumnTypeObjC``
-- ``BlackbirdIndexObjC``
+- ``ButtDBDatabaseObjC``
+- ``ButtDBTableObjC``
+- ``ButtDBColumnObjC``
+- ``ButtDBColumnTypeObjC``
+- ``ButtDBIndexObjC``

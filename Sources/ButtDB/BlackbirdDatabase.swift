@@ -1,5 +1,5 @@
 //
-//  BlackbirdDatabase.swift
+//  ButtDBDatabase.swift
 //  Created by Marco Arment on 11/28/22.
 //  Copyright (c) 2022 Marco Arment
 //
@@ -27,7 +27,7 @@
 import Foundation
 import SQLite3
 
-internal protocol BlackbirdQueryable {
+internal protocol ButtDBQueryable {
     /// Executes arbitrary SQL queries without returning a value.
     ///
     /// - Parameter query: The SQL string to execute. May contain multiple queries separated by semicolons (`;`).
@@ -49,8 +49,8 @@ internal protocol BlackbirdQueryable {
     ///         Use ``cancellableTransaction(_:)`` to roll back transactions without throwing errors.
     ///
     /// While inside the transaction's `action`:
-    /// * Queries against the isolated ``Blackbird/Database/Core`` can be executed synchronously (using `try` instead of `try await`).
-    /// * Change notifications for this database, via both ``Blackbird/ChangePublisher`` and ``Blackbird/legacyChangeNotification``, are queued until the transaction is completed. When delivered, multiple changes for the same table are consolidated into a single notification with every affected primary-key value.
+    /// * Queries against the isolated ``ButtDB/Database/Core`` can be executed synchronously (using `try` instead of `try await`).
+    /// * Change notifications for this database, via both ``ButtDB/ChangePublisher`` and ``ButtDB/legacyChangeNotification``, are queued until the transaction is completed. When delivered, multiple changes for the same table are consolidated into a single notification with every affected primary-key value.
     ///
     ///     __Note:__ Notifications may be sent for changes occurring during the transaction even if the transaction is rolled back.
     ///
@@ -68,7 +68,7 @@ internal protocol BlackbirdQueryable {
     ///
     /// ## See also
     /// ``cancellableTransaction(_:)``
-    func transaction(_ action: ((_ core: isolated Blackbird.Database.Core) throws -> Void) ) async throws
+    func transaction(_ action: ((_ core: isolated ButtDB.Database.Core) throws -> Void) ) async throws
 
     /// Equivalent to ``transaction(_:)``, but with the ability to cancel without throwing an error.
     /// - Parameter action: The actions to perform in the transaction. Return `true` to commit the transaction or `false` to roll it back. If an error is thrown, the transaction is rolled back and the error is rethrown to the caller.
@@ -87,7 +87,7 @@ internal protocol BlackbirdQueryable {
     ///     return areWeReadyForCommitment
     /// }
     /// ```
-    func cancellableTransaction(_ action: ((_ core: isolated Blackbird.Database.Core) throws -> Bool) ) async throws
+    func cancellableTransaction(_ action: ((_ core: isolated ButtDB.Database.Core) throws -> Bool) ) async throws
 
     
     /// Queries the database.
@@ -98,7 +98,7 @@ internal protocol BlackbirdQueryable {
     /// ```swift
     /// let ids = try await db.query("SELECT id FROM posts WHERE state = 1")
     /// ```
-    @discardableResult func query(_ query: String) async throws -> [Blackbird.Row]
+    @discardableResult func query(_ query: String) async throws -> [ButtDB.Row]
     
     /// Queries the database with an optional list of arguments.
     /// - Parameters:
@@ -114,7 +114,7 @@ internal protocol BlackbirdQueryable {
     ///     "Test Title" // value for title
     /// )
     /// ```
-    @discardableResult func query(_ query: String, _ arguments: Any...) async throws -> [Blackbird.Row]
+    @discardableResult func query(_ query: String, _ arguments: Any...) async throws -> [ButtDB.Row]
     
     /// Queries the database with an array of arguments.
     /// - Parameters:
@@ -129,7 +129,7 @@ internal protocol BlackbirdQueryable {
     ///     arguments: [1 /* value for state */, "Test Title" /* value for title */]
     /// )
     /// ```
-    @discardableResult func query(_ query: String, arguments: [Any]) async throws -> [Blackbird.Row]
+    @discardableResult func query(_ query: String, arguments: [Any]) async throws -> [ButtDB.Row]
     
     /// Queries the database using a dictionary of named arguments.
     ///
@@ -145,10 +145,10 @@ internal protocol BlackbirdQueryable {
     ///     arguments: [":state": 1, ":title": "Test Title"]
     /// )
     /// ```
-    @discardableResult func query(_ query: String, arguments: [String: Any]) async throws -> [Blackbird.Row]
+    @discardableResult func query(_ query: String, arguments: [String: Any]) async throws -> [ButtDB.Row]
 }
 
-extension Blackbird {
+extension ButtDB {
     /// A managed SQLite database.
     ///
     /// A lightweight wrapper around [SQLite](https://www.sqlite.org/).
@@ -157,7 +157,7 @@ extension Blackbird {
     /// The database is accessed primarily via `async` calls, internally using an `actor` for performance, concurrency, and isolation.
     ///
     /// ```swift
-    /// let db = try Blackbird.Database(path: "/tmp/test.sqlite")
+    /// let db = try ButtDB.Database(path: "/tmp/test.sqlite")
     ///
     /// // SELECT with structured arguments and returned rows
     /// for row in try await db.query("SELECT id FROM posts WHERE state = ?", 1) {
@@ -180,7 +180,7 @@ extension Blackbird {
     /// }
     /// ```
     ///
-    public class Database: Identifiable, Hashable, Equatable, BlackbirdQueryable {
+    public class Database: Identifiable, Hashable, Equatable, ButtDBQueryable {
         /// Process-unique identifiers for Database instances. Used internally.
         public typealias InstanceID = Int64
 
@@ -210,16 +210,16 @@ extension Blackbird {
 
             internal static let inMemoryDatabase            = Options(rawValue: 1 << 0)
 
-            /// Sets the database to read-only. Any calls to ``BlackbirdModel`` write functions with a read-only database will terminate with a fatal error.
+            /// Sets the database to read-only. Any calls to ``ButtDBModel`` write functions with a read-only database will terminate with a fatal error.
             public static let readOnly                      = Options(rawValue: 1 << 1)
             
             /// Logs every query with `print()`. Useful for debugging.
             public static let debugPrintEveryQuery          = Options(rawValue: 1 << 2)
             
-            /// Logs every change reported by ``Blackbird/ChangePublisher`` instances for this database with `print()`. Useful for debugging.
+            /// Logs every change reported by ``ButtDB/ChangePublisher`` instances for this database with `print()`. Useful for debugging.
             public static let debugPrintEveryReportedChange = Options(rawValue: 1 << 3)
             
-            /// Sends ``Blackbird/legacyChangeNotification`` notifications using `NotificationCenter`.
+            /// Sends ``ButtDB/legacyChangeNotification`` notifications using `NotificationCenter`.
             public static let sendLegacyChangeNotifications = Options(rawValue: 1 << 4)
         }
         
@@ -306,7 +306,7 @@ extension Blackbird {
         ///
         /// Optional. If not called, databases automatically close when deallocated.
         ///
-        /// This is useful if actions must be taken after the database is definitely closed, such as moving it, deleting it, or instantiating another ``Blackbird/Database`` instance for the same file.
+        /// This is useful if actions must be taken after the database is definitely closed, such as moving it, deleting it, or instantiating another ``ButtDB/Database`` instance for the same file.
         ///
         /// Sending any queries to a closed database throws an error.
         public func close() async {
@@ -325,19 +325,19 @@ extension Blackbird {
         public func cancellableTransaction(_ action: ((_ core: isolated Core) throws -> Bool) ) async throws { try await core.cancellableTransaction(action) }
 
         
-        @discardableResult public func query(_ query: String) async throws -> [Blackbird.Row] { return try await core.query(query, []) }
+        @discardableResult public func query(_ query: String) async throws -> [ButtDB.Row] { return try await core.query(query, []) }
 
-        @discardableResult public func query(_ query: String, _ arguments: Any...) async throws -> [Blackbird.Row] { return try await core.query(query, arguments) }
+        @discardableResult public func query(_ query: String, _ arguments: Any...) async throws -> [ButtDB.Row] { return try await core.query(query, arguments) }
 
-        @discardableResult public func query(_ query: String, arguments: [Any]) async throws -> [Blackbird.Row] { return try await core.query(query, arguments) }
+        @discardableResult public func query(_ query: String, arguments: [Any]) async throws -> [ButtDB.Row] { return try await core.query(query, arguments) }
 
-        @discardableResult public func query(_ query: String, arguments: [String: Any]) async throws -> [Blackbird.Row] { return try await core.query(query, arguments) }
+        @discardableResult public func query(_ query: String, arguments: [String: Any]) async throws -> [ButtDB.Row] { return try await core.query(query, arguments) }
 
         // MARK: - Core
 
         
         /// An actor for protected concurrent access to a database.
-        public actor Core: BlackbirdQueryable {
+        public actor Core: ButtDBQueryable {
             private var debugPrintEveryQuery = false
 
             internal var dbHandle: OpaquePointer
@@ -367,14 +367,14 @@ extension Blackbird {
                 isClosed = true
             }
 
-            public func transaction(_ action: ((_ core: isolated Blackbird.Database.Core) throws -> Void) ) throws {
+            public func transaction(_ action: ((_ core: isolated ButtDB.Database.Core) throws -> Void) ) throws {
                 try cancellableTransaction { core in
                     try action(core)
                     return true
                 }
             }
 
-            public func cancellableTransaction(_ action: ((_ core: isolated Blackbird.Database.Core) throws -> Bool) ) throws {
+            public func cancellableTransaction(_ action: ((_ core: isolated ButtDB.Database.Core) throws -> Bool) ) throws {
                 if isClosed { throw Error.databaseIsClosed }
                 let transactionID = nextTransactionID
                 nextTransactionID += 1
@@ -394,7 +394,7 @@ extension Blackbird {
             }
             
             public func execute(_ query: String) throws {
-                if debugPrintEveryQuery { print("[Blackbird.Database] \(query)") }
+                if debugPrintEveryQuery { print("[ButtDB.Database] \(query)") }
                 if isClosed { throw Error.databaseIsClosed }
 
                 let transactionID = nextTransactionID
@@ -419,13 +419,13 @@ extension Blackbird {
             }
 
             @discardableResult
-            public func query(_ query: String) throws -> [Blackbird.Row] { return try self.query(query, []) }
+            public func query(_ query: String) throws -> [ButtDB.Row] { return try self.query(query, []) }
 
             @discardableResult
-            public func query(_ query: String, _ arguments: Any...) throws -> [Blackbird.Row] { return try self.query(query, arguments: arguments) }
+            public func query(_ query: String, _ arguments: Any...) throws -> [ButtDB.Row] { return try self.query(query, arguments: arguments) }
 
             @discardableResult
-            public func query(_ query: String, arguments: [Any]) throws -> [Blackbird.Row] {
+            public func query(_ query: String, arguments: [Any]) throws -> [ButtDB.Row] {
                 if isClosed { throw Error.databaseIsClosed }
                 let statement = try preparedStatement(query)
                 var idx = 1 // SQLite bind-parameter indexes start at 1, not 0!
@@ -438,7 +438,7 @@ extension Blackbird {
             }
 
             @discardableResult
-            public func query(_ query: String, arguments: [String: Any]) throws -> [Blackbird.Row] {
+            public func query(_ query: String, arguments: [String: Any]) throws -> [ButtDB.Row] {
                 if isClosed { throw Error.databaseIsClosed }
                 let statement = try preparedStatement(query)
                 for (name, any) in arguments {
@@ -457,8 +457,8 @@ extension Blackbird {
                 return statement
             }
             
-            private func rowsByExecutingPreparedStatement(_ statement: OpaquePointer, from query: String) throws -> [Blackbird.Row] {
-                if debugPrintEveryQuery { print("[Blackbird.Database] \(query)") }
+            private func rowsByExecutingPreparedStatement(_ statement: OpaquePointer, from query: String) throws -> [ButtDB.Row] {
+                if debugPrintEveryQuery { print("[ButtDB.Database] \(query)") }
 
                 let transactionID = nextTransactionID
                 nextTransactionID += 1
@@ -485,9 +485,9 @@ extension Blackbird {
                     columnNames.append(name)
                 }
 
-                var rows: [Blackbird.Row] = []
+                var rows: [ButtDB.Row] = []
                 while result == SQLITE_ROW {
-                    var row: Blackbird.Row = [:]
+                    var row: ButtDB.Row = [:]
                     for i in 0 ..< Int(columnCount) {
                         switch sqlite3_column_type(statement, Int32(i)) {
                             case SQLITE_NULL:    row[columnNames[i]] = .null
